@@ -1,8 +1,8 @@
-import { input, select } from "@inquirer/prompts";
-import type { MultisigScript } from "../types/contracts";
-import { Address, AddressType, CredentialType } from "@blaze-cardano/core";
-import clipboard from "clipboardy";
+import { Address, CredentialType } from "@blaze-cardano/core";
 import { Blockfrost, ColdWallet, Core, Maestro, Wallet, type Provider } from "@blaze-cardano/sdk";
+import { input, select } from "@inquirer/prompts";
+import clipboard from "clipboardy";
+import type { MultisigScript } from "../src/types/contracts";
 
 export async function getMultiSigScript(title: string): Promise<MultisigScript> {
     console.log(`\n${title}`);
