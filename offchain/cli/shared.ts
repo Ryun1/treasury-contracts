@@ -587,7 +587,7 @@ export async function getProvider(): Promise<Provider> {
     choices: [
       { name: "Blockfrost", value: "blockfrost" },
       { name: "Maestro", value: "maestro" },
-      { name: "SanchoNet (hardcoded provider values)", value: "sancho" },
+      { name: "SanchoNet 🤠 (hardcoded provider values)", value: "sancho" },
     ],
   });
   switch (providerType) {

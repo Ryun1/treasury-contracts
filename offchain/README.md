@@ -6,10 +6,14 @@ To install dependencies:
 bun install
 ```
 
+To build:
+
+```bash
+bun run build
+```
+
 To run:
 
 ```bash
-bun run index.ts
+bun run ./dist/cli/cli.js <publish|initialize|fund|pause|resume|withdrawal>
 ```
-
-This project was created using `bun init` in bun v1.2.2. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
