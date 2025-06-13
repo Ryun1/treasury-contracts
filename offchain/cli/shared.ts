@@ -12,8 +12,8 @@ import {
   ColdWallet,
   Core,
   Maestro,
+  Provider,
   Wallet,
-  type Provider,
 } from "@blaze-cardano/sdk";
 import { checkbox, input, select } from "@inquirer/prompts";
 import clipboard from "clipboardy";
@@ -32,6 +32,7 @@ import {
   toMultisig,
 } from "src/metadata/types/permission";
 import type { IAnchor, ITransactionMetadata } from "../src/metadata/shared";
+import { SANCHO_PARAMETERS } from "./params";
 
 async function getSignersFromList(
   permissions: TPermissionMetadata[],
@@ -543,12 +544,50 @@ export async function transactionDialog(
   }
 }
 
+export class SanchoProvider extends Provider {
+  async getParameters(): Promise<Core.ProtocolParameters> {
+    return SANCHO_PARAMETERS;
+  }
+
+  getUnspentOutputsWithAsset(address: Address, unit: Core.AssetId): Promise<TransactionUnspentOutput[]> {
+    throw new Error("Method not implemented.");
+  }
+  getUnspentOutputByNFT(unit: Core.AssetId): Promise<TransactionUnspentOutput> {
+    throw new Error("Method not implemented.");
+  }
+  resolveUnspentOutputs(txIns: Core.TransactionInput[]): Promise<TransactionUnspentOutput[]> {
+    throw new Error("Method not implemented.");
+  }
+  resolveDatum(datumHash: Core.DatumHash): Promise<Core.PlutusData> {
+    throw new Error("Method not implemented.");
+  }
+  awaitTransactionConfirmation(txId: Core.TransactionId, timeout?: number): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
+  postTransactionToChain(tx: Transaction): Promise<Core.TransactionId> {
+    throw new Error("Method not implemented.");
+  }
+  evaluateTransaction(tx: Transaction, additionalUtxos: TransactionUnspentOutput[]): Promise<Core.Redeemers> {
+    throw new Error("Method not implemented.");
+  }
+
+  constructor() {
+    super(Core.NetworkId.Testnet, "cardano-sanchonet");
+  }
+
+  async getUnspentOutputs(): Promise<TransactionUnspentOutput[]> {
+    const utxos: TransactionUnspentOutput[] = [TransactionUnspentOutput.fromCbor(Core.HexBlob.fromBase64("fad6065cb06ac78c60f0c2ddee6824601d4621cbdb12dcbb973b5b552f3d431f#0"))];
+    return utxos;
+  }
+};
+
 export async function getProvider(): Promise<Provider> {
   const providerType = await select({
     message: "Select the provider type",
     choices: [
       { name: "Blockfrost", value: "blockfrost" },
       { name: "Maestro", value: "maestro" },
+      { name: "SanchoNet (hardcoded provider values)", value: "sancho" },
     ],
   });
   switch (providerType) {
@@ -583,6 +622,8 @@ export async function getProvider(): Promise<Provider> {
         network: mNetwork,
         apiKey: mKey,
       });
+    case "sancho":
+      return new SanchoProvider();
     default:
       throw new Error("Invalid provider type");
   }
