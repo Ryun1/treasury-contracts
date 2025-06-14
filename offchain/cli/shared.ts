@@ -2,6 +2,7 @@ import {
   Address,
   CredentialType,
   Ed25519KeyHashHex,
+  PaymentAddress,
   Script,
   Transaction,
   TransactionUnspentOutput,
@@ -555,8 +556,38 @@ export class SanchoProvider extends Provider {
   getUnspentOutputByNFT(unit: Core.AssetId): Promise<TransactionUnspentOutput> {
     throw new Error("Method not implemented.");
   }
-  resolveUnspentOutputs(txIns: Core.TransactionInput[]): Promise<TransactionUnspentOutput[]> {
-    throw new Error("Method not implemented.");
+  async resolveUnspentOutputs(txIns: Core.TransactionInput[]): Promise<TransactionUnspentOutput[]> {
+    console.log("🤠 resolveUnspentOutputs");
+    const utxos: TransactionUnspentOutput[] = [];
+
+    for (const txIn of txIns) {
+      console.log(`For UTxO: ${txIn.transactionId()}#${txIn.index()}`);
+
+      const address = await input({
+        message: "Enter the address (bech32):",
+        validate: (value) => value.startsWith("addr_test1") || "Must be a valid SanchoNet address"
+      });
+
+      const lovelace = await input({
+        message: "Enter lovelace amount:",
+        validate: (value) => !isNaN(parseInt(value)) || "Must be a number"
+      });
+
+      const utxo = TransactionUnspentOutput.fromCore([
+        {
+          txId: txIn.transactionId(),
+          index: Number(txIn.index()),
+        },
+        {
+          address: PaymentAddress(address),
+          value: {
+            coins: BigInt(lovelace),
+          }
+        }
+      ]);
+      utxos.push(utxo);
+    }
+    return Promise.resolve(utxos);
   }
   resolveDatum(datumHash: Core.DatumHash): Promise<Core.PlutusData> {
     throw new Error("Method not implemented.");
@@ -609,11 +640,13 @@ export class SanchoProvider extends Provider {
 
     const [txId, idx] = utxo.split("#");
 
-    // todo; check this is right
-    utxos.push(TransactionUnspentOutput.fromCore({
-      output: Core.TransactionOutput.fromCore({ utxo.split("#")[0] })),
-      outputIndex: BigInt(utxo.split("#")[1]),;
-    return [utxo];
+    // todo; fix this junk
+
+    // utxos.push(TransactionUnspentOutput.fromCore({
+    //   output: Core.TransactionOutput.fromCore({ utxo.split("#")[0] })),
+    //   outputIndex: BigInt(utxo.split("#")[1]),
+
+    return utxos;
   }
 };
 

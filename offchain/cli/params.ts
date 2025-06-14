@@ -1,7 +1,7 @@
 import { Core } from "@blaze-cardano/sdk";
 
 export const SANCHO_PARAMETERS: Core.ProtocolParameters = {
-  coinsPerUtxoByte: 34482,
+  coinsPerUtxoByte: 4310,
   maxTxSize: 16384,
   minFeeCoefficient: 44,
   minFeeConstant: 155381,
@@ -10,13 +10,13 @@ export const SANCHO_PARAMETERS: Core.ProtocolParameters = {
   stakeKeyDeposit: 2000000,
   poolDeposit: 500000000,
   poolRetirementEpochBound: 18,
-  desiredNumberOfPools: 500,
+  desiredNumberOfPools: 600,
   poolInfluence: "0.3",
   monetaryExpansion: "0.003",
   treasuryExpansion: "0.2",
   minPoolCost: 340000000,
   protocolVersion: {
-    major: 8,
+    major: 10,
     minor: 0
   },
   maxValueSize: 5000,
