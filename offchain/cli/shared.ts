@@ -561,12 +561,30 @@ export class SanchoProvider extends Provider {
   resolveDatum(datumHash: Core.DatumHash): Promise<Core.PlutusData> {
     throw new Error("Method not implemented.");
   }
-  awaitTransactionConfirmation(txId: Core.TransactionId, timeout?: number): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async awaitTransactionConfirmation(txId: Core.TransactionId, timeout?: number): Promise<boolean> {
+    while (true) {
+      const confirmation = await select({
+        message: `🤠 Has the transaction (${txId.toString()}) been confirmed on-chain?`,
+        choices: [
+          { name: "Yes", value: true },
+          { name: "No, lets wait ⏳", value: false }
+        ]
+      });
+
+      if (confirmation) {
+        console.log("Transaction confirmed! ✅");
+        break;
+      }
+    }
+    return Promise.resolve(true);
   }
+
   postTransactionToChain(tx: Transaction): Promise<Core.TransactionId> {
-    throw new Error("Method not implemented.");
+    console.log("Please submit the transaction to the chain manually.");
+    console.log("Transaction cbor: ", tx.toCbor());
+    return Promise.resolve(tx.getId());
   }
+
   evaluateTransaction(tx: Transaction, additionalUtxos: TransactionUnspentOutput[]): Promise<Core.Redeemers> {
     throw new Error("Method not implemented.");
   }
@@ -576,8 +594,26 @@ export class SanchoProvider extends Provider {
   }
 
   async getUnspentOutputs(): Promise<TransactionUnspentOutput[]> {
-    const utxos: TransactionUnspentOutput[] = [TransactionUnspentOutput.fromCbor(Core.HexBlob.fromBase64("fad6065cb06ac78c60f0c2ddee6824601d4621cbdb12dcbb973b5b552f3d431f#0"))];
-    return utxos;
+    const utxos: TransactionUnspentOutput[] = [];
+
+    const utxo = await input({
+      message:
+        "🤠 Enter transaction output for me to use",
+      validate: function (value) {
+        return (
+          /[0-9A-Fa-f]{64}#[0-9]+/.test(value) ||
+          "Should be in the format txId#idx"
+        );
+      },
+    });
+
+    const [txId, idx] = utxo.split("#");
+
+    // todo; check this is right
+    utxos.push(TransactionUnspentOutput.fromCore({
+      output: Core.TransactionOutput.fromCore({ utxo.split("#")[0] })),
+      outputIndex: BigInt(utxo.split("#")[1]),;
+    return [utxo];
   }
 };
 
