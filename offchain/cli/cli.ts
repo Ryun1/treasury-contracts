@@ -3,6 +3,7 @@
 import { Command } from "commander";
 import { fund } from "./treasury/fund";
 import { publish } from "./treasury/publish";
+import { sweep } from "./treasury/sweep";
 import { withdraw as initialize } from "./treasury/withdraw";
 import { pause, resume } from "./vendor/adjudicate";
 import { withdraw } from "./vendor/withdraw";
@@ -34,6 +35,13 @@ program
   .action(async () => {
     await fund();
   });
+
+program
+  .command("sweep")
+  .description("Sweep funds to treasury from the treasury")
+  .action(async () => {
+    await sweep();
+  })
 
 program
   .command("pause")
