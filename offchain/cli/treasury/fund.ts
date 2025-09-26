@@ -39,7 +39,7 @@ async function getMilestones(): Promise<{
       BigInt(
         await input({
           message:
-            "How much ADA (in lovelace) should be released for this milestone?",
+            "How much ada (in lovelace) should be released for this milestone?",
           validate: (value) => {
             const parsedValue = parseInt(value, 10);
             return parsedValue > 0 ? true : "Amount must be a positive value.";
