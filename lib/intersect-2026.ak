@@ -191,6 +191,18 @@ fn sundail() -> MultisigScript {
   }
 }
 
+fn eternl() -> MultisigScript {
+  AnyOf {
+    scripts: [
+      Signature {
+        key_hash: #"bf39799afe57f185947b6ca54efdc2a48eb628eeef4b64003b8e2433",
+      },
+      Signature {
+        key_hash: #"c01015cfebdfcd092add60d4398834cf9e84289cd17d7e2b3559b0dd",
+      },
+    ],
+  }
+}
 
 // Groups
 
@@ -203,7 +215,7 @@ fn intersect_admin() -> List<MultisigScript> {
 }
 
 fn trusted_entities() -> List<MultisigScript> {
-  [cardano_foundation(), sundae_labs(), nmkr(), dquadrant(), sundail()]
+  [cardano_foundation(), sundae_labs(), nmkr(), dquadrant(), sundail(), eternl()]
 }
 
 // Permissions
@@ -239,7 +251,7 @@ fn fund() -> MultisigScript {
 fn disburse() -> MultisigScript {
   AllOf {
     scripts: [
-      AllOf { scripts: intersect_leadership() },
+      AtLeast { required: 2, scripts: intersect_leadership() },
       AtLeast { required: 2, scripts: intersect_admin() },
       AtLeast { required: 3, scripts: trusted_entities() },
     ],
@@ -269,16 +281,19 @@ pub fn registry_token() {
   #"XXXXXX"
 }
 
+// 1 August 2029 at 0:00:00 UTC
 pub fn treasury_expiration() {
-  XXXXXX
+  1880236800000
 }
 
+// 1 August 2028 at 0:00:00 UTC
 pub fn payout_upperbound() {
-  XXXXXX
+  1882742400000
 }
 
+// 30 September 2029 at 0:00:00
 pub fn vendor_expiration() {
-  XXXXXX
+  1885420800000
 }
 
 pub fn treasury_configuration() -> TreasuryConfiguration {
