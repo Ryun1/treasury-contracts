@@ -130,10 +130,10 @@ fn cardano_foundation() -> MultisigScript {
   AnyOf {
     scripts: [
       Signature {
-        key_hash: #"ac3de68e8e1f9af3e00b299e7858bc44e126b33e130d06223d799d5d",
+        key_hash: #"c9f2966a1b357718b45a006954106ba1f7ae9fea16e9826f3486ddd6",
       },
       Signature {
-        key_hash: #"c9f2966a1b357718b45a006954106ba1f7ae9fea16e9826f3486ddd6",
+        key_hash: #"ac3de68e8e1f9af3e00b299e7858bc44e126b33e130d06223d799d5d",
       },
     ],
   }
