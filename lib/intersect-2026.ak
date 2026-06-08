@@ -286,7 +286,7 @@ pub fn treasury_expiration() {
   1880236800000
 }
 
-// 1 August 2028 at 0:00:00 UTC
+// 30 August 2029 at 0:00:00 UTC
 pub fn payout_upperbound() {
   1882742400000
 }
