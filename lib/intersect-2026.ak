@@ -178,7 +178,7 @@ fn dquadrant() -> MultisigScript {
   }
 }
 
-fn sundail() -> MultisigScript {
+fn sundial() -> MultisigScript {
   AnyOf {
     scripts: [
       Signature {
@@ -215,7 +215,7 @@ fn intersect_admin() -> List<MultisigScript> {
 }
 
 fn trusted_entities() -> List<MultisigScript> {
-  [cardano_foundation(), sundae_labs(), nmkr(), dquadrant(), sundail(), eternl()]
+  [cardano_foundation(), sundae_labs(), nmkr(), dquadrant(), sundial(), eternl()]
 }
 
 // Permissions
