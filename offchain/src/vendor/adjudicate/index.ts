@@ -28,6 +28,7 @@ import {
 } from "../../metadata/shared.js";
 import type { IPause, IResume } from "../../metadata/types/adjudicate.js";
 import {
+  attachScriptRef,
   loadConfigsAndScripts,
   rewardAccountFromScript,
   TConfigsOrScripts,
@@ -114,16 +115,7 @@ export async function adjudicate<P extends Provider, W extends Wallet>({
     }
   }
 
-  if (!scripts.vendorScript.scriptRef) {
-    scripts.vendorScript.scriptRef = await blaze.provider.resolveScriptRef(
-      scripts.vendorScript.script.Script,
-    );
-  }
-  if (scripts.vendorScript.scriptRef) {
-    tx.addReferenceInput(scripts.vendorScript.scriptRef);
-  } else {
-    tx.provideScript(scripts.vendorScript.script.Script);
-  }
+  await attachScriptRef(tx, scripts.vendorScript, blaze);
 
   if (metadata) {
     const auxData = new AuxiliaryData();

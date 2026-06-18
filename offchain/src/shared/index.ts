@@ -14,6 +14,7 @@ import {
   Core,
   makeValue,
   Provider,
+  TxBuilder,
   Wallet,
 } from "@blaze-cardano/sdk";
 import { type Cardano } from "@cardano-sdk/core";
@@ -321,4 +322,24 @@ export function rewardAccountFromScript(
     hash: script.hash(),
   };
   return RewardAccount.fromCredential(credential, network);
+}
+
+/**
+ * Prefer the registry script reference UTxO already attached in configsOrScripts,
+ * then fall back to resolveScriptRef (burn address) and inline provideScript.
+ */
+export async function attachScriptRef<P extends Provider, W extends Wallet>(
+  tx: TxBuilder,
+  compiledScript: ICompiledScript<{ Script: Script }, unknown>,
+  blaze: Blaze<P, W>,
+) {
+  if (!compiledScript.scriptRef) {
+    compiledScript.scriptRef = await blaze.provider.resolveScriptRef(
+      compiledScript.script.Script,
+    );
+  }
+  if (compiledScript.scriptRef) {
+    return tx.addReferenceInput(compiledScript.scriptRef);
+  }
+  return tx.provideScript(compiledScript.script.Script);
 }

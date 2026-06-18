@@ -27,6 +27,7 @@ import { ITransactionMetadata, toTxMetadata } from "../../metadata/shared.js";
 import { IComplete } from "../../metadata/types/complete.js";
 import { IWithdraw } from "../../metadata/types/withdraw.js";
 import {
+  attachScriptRef,
   contractsValueToCoreValue,
   loadConfigsAndScripts,
   rewardAccountFromScript,
@@ -90,16 +91,7 @@ export async function withdraw<P extends Provider, W extends Wallet>({
     }
   }
 
-  if (!scripts.vendorScript.scriptRef) {
-    scripts.vendorScript.scriptRef = await blaze.provider.resolveScriptRef(
-      scripts.vendorScript.script.Script,
-    );
-  }
-  if (scripts.vendorScript.scriptRef) {
-    tx.addReferenceInput(scripts.vendorScript.scriptRef);
-  } else {
-    tx.provideScript(scripts.vendorScript.script.Script);
-  }
+  await attachScriptRef(tx, scripts.vendorScript, blaze);
 
   if (metadata) {
     const auxData = new AuxiliaryData();

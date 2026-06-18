@@ -21,6 +21,7 @@ import * as Tx from "@blaze-cardano/tx";
 
 import { TreasurySpendRedeemer } from "../../generated-types/contracts.js";
 import {
+  attachScriptRef,
   coreValueToContractsValue,
   loadConfigsAndScripts,
   rewardAccountFromScript,
@@ -52,27 +53,24 @@ export async function disburse<P extends Provider, W extends Wallet>({
 }: IDisburseArgs<P, W>): Promise<TxBuilder> {
   console.log("Disburse transaction started");
   const { configs, scripts } = loadConfigsAndScripts(blaze, configsOrScripts);
-  const { script: treasuryScript, scriptAddress: treasuryScriptAddress } =
-    scripts.treasuryScript;
+  const { scriptAddress: treasuryScriptAddress } = scripts.treasuryScript;
   const registryInput = await blaze.provider.getUnspentOutputByNFT(
     AssetId(configs.treasury.registry_token + toHex(Buffer.from("REGISTRY"))),
   );
 
-  const refInput = await blaze.provider.resolveScriptRef(
-    treasuryScript.Script.hash(),
-  );
-  if (!refInput)
-    throw new Error("Could not find treasury script reference on-chain");
-  let tx = blaze
-    .newTransaction()
-    .addReferenceInput(registryInput)
-    .addReferenceInput(refInput);
+  let tx = blaze.newTransaction().addReferenceInput(registryInput);
+  tx = await attachScriptRef(tx, scripts.treasuryScript, blaze);
 
   if (!!additionalScripts) {
     for (const { script, redeemer } of additionalScripts) {
       const refInput = await blaze.provider.resolveScriptRef(script);
+      if (!refInput) {
+        throw new Error(
+          `Could not find one of the additional scripts provided on-chain: ${script.hash()}. Please publish the script and try again.`,
+        );
+      }
       tx = tx
-        .addReferenceInput(refInput!)
+        .addReferenceInput(refInput)
         .addWithdrawal(
           rewardAccountFromScript(script, blaze.provider.network),
           0n,

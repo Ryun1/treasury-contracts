@@ -16,7 +16,9 @@ import {
   type TreasuryTreasuryWithdraw,
 } from "../../src/generated-types/contracts";
 import {
+  constructScripts,
   loadTreasuryScript,
+  loadVendorScript,
   coreValueToContractsValue as translateValue,
 } from "../../src/shared";
 import { disburse } from "../../src/treasury/disburse";
@@ -129,6 +131,47 @@ describe("When disbursing", () => {
             blaze,
             await disburse({
               configsOrScripts: { configs },
+              blaze,
+              input: scriptInput,
+              recipient: vendor,
+              amount: makeValue(10_000_000n),
+              signers: [Ed25519KeyHashHex(await disburse_key(emulator))],
+            }),
+          );
+        });
+      });
+      test("can disburse by providing the treasury script ref manually", async () => {
+        await emulator.as(Disburser, async (blaze) => {
+          const vendor = await emulator.register("Vendor");
+          const vendorScript = loadVendorScript(
+            Core.NetworkId.Testnet,
+            configs.vendor,
+            true,
+          );
+          const scripts = constructScripts(
+            Core.NetworkId.Testnet,
+            configs.treasury,
+            treasuryScript.Script,
+            configs.vendor,
+            vendorScript.script.Script,
+            Core.TransactionUnspentOutput.fromCore([
+              {
+                index: 9,
+                txId: Core.TransactionId("0".repeat(64)),
+              },
+              {
+                address: Core.PaymentAddress(
+                  "addr_test1wza7ec20249sqg87yu2aqkqp735qa02q6yd93u28gzul93gvc4wuw",
+                ),
+                value: new Core.Value(5000001n).toCore(),
+                scriptReference: treasuryScript.Script.asPlutusV3()?.toCore(),
+              },
+            ]),
+          );
+          await emulator.expectValidTransaction(
+            blaze,
+            await disburse({
+              configsOrScripts: { configs, scripts },
               blaze,
               input: scriptInput,
               recipient: vendor,

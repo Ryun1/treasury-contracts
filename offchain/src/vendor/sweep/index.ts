@@ -13,6 +13,7 @@ import {
   VendorSpendRedeemer,
 } from "../../generated-types/contracts.js";
 import {
+  attachScriptRef,
   contractsValueToCoreValue,
   loadConfigsAndScripts,
   TConfigsOrScripts,
@@ -43,17 +44,7 @@ export async function sweep<P extends Provider, W extends Wallet>({
     .addReferenceInput(registryInput)
     .setValidFrom(blaze.provider.unixToSlot(now.valueOf()))
     .setValidUntil(blaze.provider.unixToSlot(now.valueOf() + thirtSixHours));
-
-  if (!scripts.vendorScript.scriptRef) {
-    scripts.vendorScript.scriptRef = await blaze.provider.resolveScriptRef(
-      scripts.vendorScript.script.Script,
-    );
-  }
-  if (scripts.vendorScript.scriptRef) {
-    tx.addReferenceInput(scripts.vendorScript.scriptRef);
-  } else {
-    tx.provideScript(scripts.vendorScript.script.Script);
-  }
+  tx = await attachScriptRef(tx, scripts.vendorScript, blaze);
 
   let value = Value.zero();
   for (const input of inputs) {

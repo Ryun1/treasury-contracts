@@ -20,6 +20,7 @@ import {
   VendorSpendRedeemer,
 } from "../../generated-types/contracts.js";
 import {
+  attachScriptRef,
   contractsValueToCoreValue,
   loadConfigsAndScripts,
   rewardAccountFromScript,
@@ -47,32 +48,31 @@ export async function modify<P extends Provider, W extends Wallet>({
 }: IModifyArgs<P, W>): Promise<TxBuilder> {
   const { configs, scripts } = loadConfigsAndScripts(blaze, configsOrScripts);
   const { scriptAddress: treasuryScriptAddress } = scripts.treasuryScript;
-  const { scriptAddress: vendorScriptAddress, script: vendorScript } =
-    scripts.vendorScript;
+  const { scriptAddress: vendorScriptAddress } = scripts.vendorScript;
   const registryInput = await blaze.provider.getUnspentOutputByNFT(
     AssetId(configs.vendor.registry_token + toHex(Buffer.from("REGISTRY"))),
   );
-  const refInput = await blaze.provider.resolveScriptRef(
-    vendorScript.Script.hash(),
-  );
-  if (!refInput)
-    throw new Error("Could not find vendor script reference on-chain");
   const thirty_six_hours = 36 * 60 * 60 * 1000; // 36 hours in milliseconds
   let tx = blaze
     .newTransaction()
     .addReferenceInput(registryInput)
-    .addReferenceInput(refInput)
     .setValidFrom(blaze.provider.unixToSlot(now.valueOf()))
     .setValidUntil(blaze.provider.unixToSlot(now.valueOf() + thirty_six_hours))
     .addInput(input, Data.serialize(VendorSpendRedeemer, "Modify"));
+  tx = await attachScriptRef(tx, scripts.vendorScript, blaze);
   for (const signer of signers) {
     tx = tx.addRequiredSigner(signer);
   }
   if (!!additionalScripts) {
     for (const { script, redeemer } of additionalScripts) {
       const refInput = await blaze.provider.resolveScriptRef(script);
+      if (!refInput) {
+        throw new Error(
+          `Could not find one of the additional scripts provided on-chain: ${script.hash()}. Please publish the script and try again.`,
+        );
+      }
       tx = tx
-        .addReferenceInput(refInput!)
+        .addReferenceInput(refInput)
         .addWithdrawal(
           rewardAccountFromScript(script, blaze.provider.network),
           0n,
@@ -131,17 +131,7 @@ export async function cancel<P extends Provider, W extends Wallet>({
     .setValidFrom(blaze.provider.unixToSlot(now.valueOf()))
     .setValidUntil(blaze.provider.unixToSlot(now.valueOf() + thirty_six_hours))
     .addInput(input, Data.serialize(VendorSpendRedeemer, "Modify"));
-
-  if (!scripts.vendorScript.scriptRef) {
-    scripts.vendorScript.scriptRef = await blaze.provider.resolveScriptRef(
-      scripts.vendorScript.script.Script,
-    );
-  }
-  if (scripts.vendorScript.scriptRef) {
-    tx.addReferenceInput(scripts.vendorScript.scriptRef);
-  } else {
-    tx.provideScript(scripts.vendorScript.script.Script);
-  }
+  tx = await attachScriptRef(tx, scripts.vendorScript, blaze);
 
   for (const signer of signers) {
     tx = tx.addRequiredSigner(signer);
