@@ -10,6 +10,7 @@ import {
 
 import { VendorSpendRedeemer } from "../../generated-types/contracts.js";
 import {
+  attachScriptRef,
   loadConfigsAndScripts,
   TConfigsOrScripts,
 } from "../../shared/index.js";
@@ -32,17 +33,7 @@ export async function sweep_malformed<P extends Provider, W extends Wallet>({
   );
 
   let tx = blaze.newTransaction().addReferenceInput(registryInput);
-
-  if (!scripts.vendorScript.scriptRef) {
-    scripts.vendorScript.scriptRef = await blaze.provider.resolveScriptRef(
-      scripts.vendorScript.script.Script,
-    );
-  }
-  if (scripts.vendorScript.scriptRef) {
-    tx.addReferenceInput(scripts.vendorScript.scriptRef);
-  } else {
-    tx.provideScript(scripts.vendorScript.script.Script);
-  }
+  tx = await attachScriptRef(tx, scripts.vendorScript, blaze);
 
   let value = Value.zero();
   for (const input of inputs) {

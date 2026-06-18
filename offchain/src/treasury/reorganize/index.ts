@@ -18,6 +18,7 @@ import {
 
 import { TreasurySpendRedeemer } from "../../generated-types/contracts.js";
 import {
+  attachScriptRef,
   loadConfigsAndScripts,
   rewardAccountFromScript,
   TConfigsOrScripts,
@@ -41,24 +42,26 @@ export async function reorganize<P extends Provider, W extends Wallet>({
   additionalScripts,
 }: IReorganizeArgs<P, W>): Promise<TxBuilder> {
   const { configs, scripts } = loadConfigsAndScripts(blaze, configsOrScripts);
-  const { script, scriptAddress } = scripts.treasuryScript;
+  const { scriptAddress } = scripts.treasuryScript;
   const registryInput = await blaze.provider.getUnspentOutputByNFT(
     AssetId(configs.treasury.registry_token + toHex(Buffer.from("REGISTRY"))),
   );
-  const refInput = await blaze.provider.resolveScriptRef(script.Script.hash());
-  if (!refInput)
-    throw new Error("Could not find treasury script reference on-chain");
   let tx = blaze
     .newTransaction()
     .setValidUntil(Slot(Number(configs.treasury.expiration / 1000n) - 1))
-    .addReferenceInput(registryInput)
-    .addReferenceInput(refInput);
+    .addReferenceInput(registryInput);
+  tx = await attachScriptRef(tx, scripts.treasuryScript, blaze);
 
   if (!!additionalScripts) {
     for (const { script, redeemer } of additionalScripts) {
       const refInput = await blaze.provider.resolveScriptRef(script);
+      if (!refInput) {
+        throw new Error(
+          `Could not find one of the additional scripts provided on-chain: ${script.hash()}. Please publish the script and try again.`,
+        );
+      }
       tx = tx
-        .addReferenceInput(refInput!)
+        .addReferenceInput(refInput)
         .addWithdrawal(
           rewardAccountFromScript(script, blaze.provider.network),
           0n,

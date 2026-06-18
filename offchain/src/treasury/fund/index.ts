@@ -29,6 +29,7 @@ import {
 import { ITransactionMetadata, toTxMetadata } from "../../metadata/shared.js";
 import { IFund } from "../../metadata/types/fund.js";
 import {
+  attachScriptRef,
   coreValueToContractsValue,
   loadConfigsAndScripts,
   rewardAccountFromScript,
@@ -109,16 +110,7 @@ export async function fund<P extends Provider, W extends Wallet>({
     }
   }
 
-  if (!scripts.treasuryScript.scriptRef) {
-    scripts.treasuryScript.scriptRef = await blaze.provider.resolveScriptRef(
-      scripts.treasuryScript.script.Script,
-    );
-  }
-  if (scripts.treasuryScript.scriptRef) {
-    tx.addReferenceInput(scripts.treasuryScript.scriptRef);
-  } else {
-    tx.provideScript(scripts.treasuryScript.script.Script);
-  }
+  await attachScriptRef(tx, scripts.treasuryScript, blaze);
 
   if (metadata) {
     const auxData = new AuxiliaryData();
