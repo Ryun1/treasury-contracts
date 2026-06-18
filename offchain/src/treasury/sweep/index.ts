@@ -41,9 +41,9 @@ export async function sweep<P extends Provider, W extends Wallet>({
     .setValidFrom(
       blaze.provider.unixToSlot(Number(configs.treasury.expiration + 1000n)),
     )
-    .addReferenceInput(registryInput);
+    .addReferenceInput(registryInput)
+    .setDonation(amount);
   tx = await attachScriptRef(tx, scripts.treasuryScript, blaze);
-  tx = tx.setDonation(amount);
 
   const remainder = Value.merge(input.output().amount(), makeValue(-amount));
   if (remainder !== Value.zero()) {
